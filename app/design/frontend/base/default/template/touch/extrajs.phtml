@@ -1,0 +1,5 @@
+<?php echo $this->getCssJsHtml();
+
+$service = new Touch_TouchPayment_Model_Api_Touch();
+$js = $service->getJavascriptSources(Mage::getSingleton("core/session")->getEncryptedSessionId());
+echo '<script type="text/javascript" src="'.$js->result->url.'"></script>';
