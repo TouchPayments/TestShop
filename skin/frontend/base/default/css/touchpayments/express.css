@@ -42,6 +42,11 @@
     margin-top: 0 !important;
 }
 
+.checkout-types.top .btn-proceed-checkout {
+    line-height: 20px;
+    padding: 10px 15px;
+}
+
 #p_method_touch_touchexpress, label[for="p_method_touch_touchexpress"], #container_payment_method_touch_touchexpress {
     display: none;
 }
