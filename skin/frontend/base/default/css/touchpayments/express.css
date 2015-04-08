@@ -12,6 +12,7 @@
     text-decoration: none;
     letter-spacing: 1px;
     cursor: pointer;
+    width: 200px;
 
     -moz-border-radius: 0px;
     -webkit-border-radius: 0px;
@@ -42,9 +43,10 @@
     margin-top: 0 !important;
 }
 
-.checkout-types.top .btn-proceed-checkout {
+.checkout-types .btn-proceed-checkout {
     line-height: 20px;
     padding: 10px 15px;
+    width: 200px;
 }
 
 #p_method_touch_touchexpress, label[for="p_method_touch_touchexpress"], #container_payment_method_touch_touchexpress {
@@ -144,4 +146,10 @@ p.what-is-touch {
     text-align: center;
     color: #45BED3;
     text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+    .tpe-submit {
+        width: 100%;
+    }
 }
