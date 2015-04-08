@@ -152,4 +152,8 @@ p.what-is-touch {
     .tpe-submit {
         width: 100%;
     }
+
+    .checkout-types .btn-proceed-checkout {
+        width: 100%;
+    }
 }
