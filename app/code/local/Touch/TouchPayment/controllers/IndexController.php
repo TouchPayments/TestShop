@@ -7,6 +7,8 @@
  */
 class Touch_TouchPayment_IndexController extends Mage_Core_Controller_Front_Action
 {
+
+
     public function smsAction()
     {
         $this->loadLayout();
@@ -179,7 +181,23 @@ class Touch_TouchPayment_IndexController extends Mage_Core_Controller_Front_Acti
         $order = Mage::getModel('sales/order')->loadByAttribute('touch_token', $token);
 
         if ($order) {
-            $order->setState(Mage_Sales_Model_Order::STATE_NEW, Touch_TouchPayment_Model_Sales_Order::STATUS_TOUCH_PENDING)->save();
+            // Set order to touch-pending, or processing if the shipping method is to be bypassed.
+            $payment         = $order->getPayment();
+            $method          = $payment->getMethodInstance();
+            $shippingMethods = explode(',', $method->getConfigData('shipping_methods'));
+            $pendingSkipped  = false;
+
+            foreach ($shippingMethods as $skipShipping) {
+                if (strpos($order->getShippingMethod(), $skipShipping) !== false) {
+                    $orderStatus = $method->getConfigData('order_status');
+                    $order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, $orderStatus)->save();
+                        $pendingSkipped = true;
+                    }
+            }
+
+            if (!$pendingSkipped) {
+                $order->setState(Mage_Sales_Model_Order::STATE_NEW, Touch_TouchPayment_Model_Sales_Order::STATUS_TOUCH_PENDING)->save();
+            }
 
             exit(json_encode(array('status' => 'success')));
         }
@@ -189,7 +207,7 @@ class Touch_TouchPayment_IndexController extends Mage_Core_Controller_Front_Acti
 
     private function _handleTouchApprovalResponse(Mage_Sales_Model_Order $order, $apprReturn)
     {
-        if ($apprReturn->result->status == 'approved') {
+        if (in_array($apprReturn->result->status, Touch_Item::$shippableStatus)) {
             $order->addStatusHistoryComment('Touch Status : ----')
                 ->setIsCustomerNotified(false)
                 ->save();

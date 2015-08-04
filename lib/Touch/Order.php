@@ -27,6 +27,11 @@ class Touch_Order extends Touch_Object {
     public $discount;
 
     /**
+     * @var Float
+     */
+    public $giftCardAmount;
+
+    /**
      * @var float
      */
     public $gst;

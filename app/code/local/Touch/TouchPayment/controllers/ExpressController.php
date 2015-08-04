@@ -2,7 +2,7 @@
 /**
  * Controller which will be redirected to from Touch's website
  *
- * @copyright  2013 Touch Payments / Checkn Pay Ltd Pltd
+ * @copyright  2013 Touch Payments / Checkn Pay Pty Ltd
  */
 class Touch_TouchPayment_ExpressController extends Mage_Core_Controller_Front_Action {
 
@@ -29,6 +29,7 @@ class Touch_TouchPayment_ExpressController extends Mage_Core_Controller_Front_Ac
                 }
                 break;
 
+
             case 'get-shipping-methods':
 
                 $this->handleShippingMethodsRequest();
@@ -43,7 +44,6 @@ class Touch_TouchPayment_ExpressController extends Mage_Core_Controller_Front_Ac
 
                 $this->handleIsReturningRequest();
                 break;
-
             default:
                 exit(json_encode(array('status' => 'error')));
         }
@@ -55,16 +55,15 @@ class Touch_TouchPayment_ExpressController extends Mage_Core_Controller_Front_Ac
         $addressShipping = json_decode($this->getRequest()->getParam('addressShipping'), true);
 
         if ($addressShipping) {
-            $quote        = Mage::getModel('sales/quote')->load($this->getRequest()->getParam('token'), 'touch_token');
+            $quote = Mage::getModel('sales/quote')->load($this->getRequest()->getParam('token'), 'touch_token');
+            Mage::getSingleton('checkout/session')->setQuoteId($quote->getId());
+
             $addressTouch = new Touch_Address();
             foreach ($addressShipping as $key => $value) {
                 $addressTouch->{$key} = $value;
             }
 
-            $cart = Mage::getSingleton('checkout/cart');
-            $address = $cart->getQuote()->getShippingAddress();
-            $address->setQuote($quote);
-
+            $address     = $quote->getShippingAddress();
             $regionModel = Mage::getModel('directory/region')->loadByCode($addressTouch->state, $addressTouch->country);
 
             $address->setCountryId($addressTouch->country)
@@ -72,16 +71,11 @@ class Touch_TouchPayment_ExpressController extends Mage_Core_Controller_Front_Ac
                 ->setRegionId($regionModel->getId())
                 ->setPostcode($addressTouch->postcode)
                 ->setCity($addressTouch->suburb)
-                ->setCollectShippingrates(true);
-            $cart->save();
+                ->setStreet($addressTouch->addressOne)
+                ->setCollectShippingRates(true);
 
-            $rates = $address->collectShippingRates()
-                ->getGroupedAllShippingRates();
-
-            // Get rid of that new quote we just created to calculate shipping costs
-            $tmpQuote = $cart->getQuote();
-            $tmpQuote->getShippingAddress()->delete();
-            $tmpQuote->delete();
+            $address->collectShippingRates()->save();
+            $rates = $address->getGroupedAllShippingRates();
 
             $shippingMethods = array();
 
@@ -97,8 +91,6 @@ class Touch_TouchPayment_ExpressController extends Mage_Core_Controller_Front_Ac
                     $shippingMethods[] = $method;
                 }
             }
-
-
             exit(json_encode($shippingMethods));
         }
 
@@ -114,10 +106,10 @@ class Touch_TouchPayment_ExpressController extends Mage_Core_Controller_Front_Ac
                 ->addFieldToSelect('customer_email')
                 ->addFieldToFilter('customer_email', $email);
 
-            exit(json_encode(['existing' => (count($orders) ? true : false)]));
+            exit(json_encode(array('existing' => (count($orders) ? count($orders) : false))));
         }
 
-        exit(json_encode(['existing' => false]));
+        exit(json_encode(array('existing' => false)));
     }
 
     protected function handleSaveOrderRequest()
@@ -148,6 +140,4 @@ class Touch_TouchPayment_ExpressController extends Mage_Core_Controller_Front_Ac
         }
         exit(json_encode($response));
     }
-
-
 }

@@ -174,6 +174,7 @@ class Touch_TouchPayment_Model_OrderHandler extends Mage_Core_Model_Abstract
                 Mage::app()->getStore()->setConfig(Mage_Sales_Model_Order::XML_PATH_EMAIL_ENABLED, "0");
                 $_order = $model->importPostData($orderData['order'])->createOrder();
 
+
                 $_order->setTouchToken($this->_sourceQuote->getTouchToken());
                 $_order->save();
 
@@ -190,6 +191,23 @@ class Touch_TouchPayment_Model_OrderHandler extends Mage_Core_Model_Abstract
     protected function _processQuote($data = array())
     {
         $model = $this->_getOrderCreateModel();
+        Mage::getSingleton('checkout/session')->setQuoteId($this->_sourceQuote->getId());
+
+        $billing = $data['order']['billing_address'];
+        $shipping = $data['order']['shipping_address'];
+
+        $billing['street'] = implode("\n", $billing['street']);
+        $shipping['street'] = implode("\n", $shipping['street']);
+
+        $this->_sourceQuote->getBillingAddress()->addData($billing);
+        $this->_sourceQuote->getShippingAddress()->addData($shipping);
+        $this->_sourceQuote->getShippingAddress()->setShippingMethod($data['order']['shipping_method']);
+
+        $this->_sourceQuote->getShippingAddress()->collectTotals();
+
+        $this->_sourceQuote->getPayment()->addData($data['payment']);
+        $this->_sourceQuote->collectTotals();
+
         $model->setQuote($this->_sourceQuote);
 
         /* Saving order data */
@@ -197,16 +215,10 @@ class Touch_TouchPayment_Model_OrderHandler extends Mage_Core_Model_Abstract
             $model->importPostData($data['order']);
         }
 
-
-        /* Just like adding products from Magento admin grid */
-//        if (!empty($data['add_products'])) {
-//            $model->addProducts($data['add_products']);
-//        }
-
         /* Collect shipping rates */
         $model->collectShippingRates();
-        /* Add payment data */
 
+        /* Add payment data */
         if (!empty($data['payment'])) {
             $model->getQuote()->getPayment()->addData($data['payment']);
         }

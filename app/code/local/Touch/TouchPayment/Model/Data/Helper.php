@@ -43,8 +43,8 @@ class Touch_TouchPayment_Model_Data_Helper
 
         $touchOrder = new Touch_Order();
         $touchOrder->merchantRefNumber = $order->getIncrementId();
-        $touchOrder->addressBilling    = self::processAddress($order->getBillingAddress());
-        $touchOrder->addressShipping   = self::processAddress($order->getShippingAddress());
+        $touchOrder->addressBilling = self::processAddress($order->getBillingAddress());
+        $touchOrder->addressShipping = self::processAddress($order->getShippingAddress());
         $grandTotal
             = $order->getGrandTotal() - $order->getTouchBaseFeeAmount() - $order->getTouchBaseExtensionFeeAmount();
         $touchOrder->grandTotal = $grandTotal;
@@ -71,7 +71,7 @@ class Touch_TouchPayment_Model_Data_Helper
         }
 
         if ($order->getGiftCardsAmount()) {
-            $touchOrder->discount += $order->getGiftCardsAmount();
+            $touchOrder->giftCardAmount = $order->getGiftCardsAmount();
         }
 
         return $touchOrder;
@@ -115,7 +115,7 @@ class Touch_TouchPayment_Model_Data_Helper
         $touchOrder = self::processItems($quote->getAllItems(), $touchOrder);
 
         if ($quote->getGiftCardsAmount()) {
-            $touchOrder->discount += $quote->getGiftCardsAmount();
+            $touchOrder->giftCardAmount = $quote->getGiftCardsAmount();
         }
 
         if ($quote->getGwPrice()) {

@@ -96,13 +96,6 @@ class Touch_TouchPayment_Model_Observer {
         }
     }
 
-    /**
-     * Cronjob to automatically cancel orders created through Touch Checkout
-     * which haven't been approved by the customer following the confirmation
-     * link sent to them by SMS.
-     *
-     * @throws Exception
-     */
     public function autoCancelPendingOrders()
     {
         $orderCollection = Mage::getResourceModel('sales/order_collection');
@@ -140,10 +133,10 @@ class Touch_TouchPayment_Model_Observer {
         $orderCollection = Mage::getResourceModel('sales/order_collection');
 
         $orderCollection
-        ->addFieldToFilter('status', Touch_TouchPayment_Model_Sales_Order::STATUS_TOUCH_PENDING)
-        ->addFieldToFilter('state', 'new')
-        ->addFieldToFilter('created_at', array(
-            'lt' =>  new Zend_Db_Expr("DATE_ADD('".now()."', INTERVAL - 2 HOUR)")));
+            ->addFieldToFilter('status', Touch_TouchPayment_Model_Sales_Order::STATUS_TOUCH_PENDING)
+            ->addFieldToFilter('state', 'new')
+            ->addFieldToFilter('created_at', array(
+                'lt' =>  new Zend_Db_Expr("DATE_ADD('".now()."', INTERVAL - 1 HOUR)")));
 
         $payment = new Touch_TouchPayment_Model_Payment();
         foreach ($orderCollection->getItems() as $order) {
@@ -199,7 +192,7 @@ class Touch_TouchPayment_Model_Observer {
         $shippable = array();
 
         foreach ($touchOrder->items as $item) {
-            if ($item->status == 'approved') {
+            if (in_array($item->status, Touch_Item::$shippableStatus)) {
                 if (empty($shippable[$item->sku])) {
                     $shippable[$item->sku] = array($item->id);
                 } else {
